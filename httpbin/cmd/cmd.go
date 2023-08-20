@@ -70,6 +70,7 @@ func mainImpl(args []string, getEnv func(string) string, getHostname func() (str
 		httpbin.WithMaxDuration(cfg.MaxDuration),
 		httpbin.WithObserver(httpbin.StdLogObserver(logger)),
 		httpbin.WithExcludeHeaders(cfg.ExcludeHeaders),
+		httpbin.WithOutputBody(cfg.OutputBody),
 	}
 	if cfg.RealHostname != "" {
 		opts = append(opts, httpbin.WithHostname(cfg.RealHostname))
@@ -107,6 +108,7 @@ type config struct {
 	RealHostname           string
 	TLSCertFile            string
 	TLSKeyFile             string
+	OutputBody             bool
 
 	// temporary placeholders for arguments that need extra processing
 	rawAllowedRedirectDomains string
@@ -143,6 +145,7 @@ func loadConfig(args []string, getEnv func(string) string, getHostname func() (s
 	fs.StringVar(&cfg.TLSCertFile, "https-cert-file", "", "HTTPS Server certificate file")
 	fs.StringVar(&cfg.TLSKeyFile, "https-key-file", "", "HTTPS Server private key file")
 	fs.StringVar(&cfg.ExcludeHeaders, "exclude-headers", "", "Drop platform-specific headers. Comma-separated list of headers key to drop, supporting wildcard matching.")
+	fs.BoolVar(&cfg.OutputBody, "output-body", false, "Output the request body. This only affects POST/PUT/PATCH requests")
 
 	// in order to fully control error output whether CLI arguments or env vars
 	// are used to configure the app, we need to take control away from the
@@ -225,6 +228,10 @@ func loadConfig(args []string, getEnv func(string) string, getHostname func() (s
 		if err != nil {
 			return nil, fmt.Errorf("could not look up real hostname: %w", err)
 		}
+	}
+
+	if !cfg.OutputBody && getEnv("OUTPUT_BODY") != "" {
+		cfg.OutputBody = true
 	}
 
 	// split comma-separated list of domains into a slice, if given

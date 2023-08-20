@@ -47,6 +47,9 @@ type HTTPBin struct {
 	// Set of hosts to which the /redirect-to endpoint will allow redirects
 	AllowedRedirectDomains map[string]struct{}
 
+	// Output body
+	OutputBody bool
+
 	forbiddenRedirectError string
 
 	// The hostname to expose via /hostname.

@@ -71,3 +71,9 @@ Allowed redirect destinations:
 %s`, strings.Join(formattedListItems, "\n"))
 	}
 }
+
+func WithOutputBody(outputBody bool) OptionFunc {
+	return func(h *HTTPBin) {
+		h.OutputBody = outputBody
+	}
+}

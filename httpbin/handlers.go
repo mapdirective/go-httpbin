@@ -10,8 +10,10 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
+	"text/tabwriter"
 	"time"
 
 	"github.com/mccutchen/go-httpbin/v2/httpbin/digest"
@@ -83,6 +85,34 @@ func (h *HTTPBin) RequestWithBody(w http.ResponseWriter, r *http.Request) {
 	if err := parseBody(w, r, resp); err != nil {
 		writeError(w, http.StatusBadRequest, fmt.Errorf("error parsing request body: %w", err))
 		return
+	}
+
+	if h.OutputBody {
+
+		// Create a new tabwriter with padding and alignment settings
+		w := tabwriter.NewWriter(os.Stdout, 0, 0, 2, ' ', tabwriter.AlignRight)
+
+		fmt.Fprintln(w)
+
+		// Print origin
+		fmt.Fprintf(w, "Origin:\t%s\t", resp.Origin)
+		fmt.Fprintln(w)
+
+		// Print headers
+		for header, vals := range resp.Headers {
+			fmt.Fprintf(w, "%s:\t%+v\t", header, vals)
+			fmt.Fprintln(w)
+		}
+
+		fmt.Fprintln(w)
+
+		// Print method and path
+		fmt.Fprintf(w, "%s %s\n", resp.Method, r.URL.RequestURI())
+
+		// Data
+		fmt.Fprintf(w, "%s\n\n", resp.Data)
+
+		w.Flush()
 	}
 
 	writeJSON(http.StatusOK, w, resp)
